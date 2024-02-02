@@ -31,7 +31,7 @@ public class AwsS3Repository {
     // The S3 client used to interact with AWS S3
     private S3Client s3Client;
 
-    // The AWS region where the S3 bucket is located
+    // The AWS region where the S3 bucket is located - miproject.s3-ap-northeast-1.amazonaws.com
     @Value("${aws.s3.region:ap-northeast-1}")
     private Region region;
 

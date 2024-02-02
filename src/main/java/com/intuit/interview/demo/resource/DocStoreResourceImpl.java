@@ -37,8 +37,8 @@ public class DocStoreResourceImpl {
      * @return a list of all objects in the document store
      */
     @GetMapping("/print-all")
-    @PreAuthorize("hasAuthority('SCOPE_email')")
-    public List<String> listObjects(@AuthenticationPrincipal OidcUser user, @RequestParam(name = "bucket") String bucket) {
+    public List<String> listObjects(@AuthenticationPrincipal OidcUser user,
+                                    @RequestParam(required=false, name = "bucket") String bucket) {
         return docStoreService.listObjects(bucket);
     }
 
@@ -50,8 +50,9 @@ public class DocStoreResourceImpl {
      * @return the metadata of the specified object
      */
     @GetMapping("/object_metadata/**")
-    public String getObjectMetadata(Principal principal, HttpServletRequest request) {
-        return docStoreService.getObjectMetadata(decode(request));
+    public String getObjectMetadata(Principal principal, HttpServletRequest request,
+                                    @RequestParam(required=false, name = "bucket") String bucket) {
+        return docStoreService.getObjectMetadata(decode(request), bucket);
     }
 
     /**
@@ -60,6 +61,7 @@ public class DocStoreResourceImpl {
      * @return a list of the last few lines of the audit log
      */
     @GetMapping("/audit_log")
+    @PreAuthorize("hasAuthority('SCOPE_email')")
     public List<String> auditObjectMetadata() {
         return docStoreService.auditObjectMetadata();
     }
