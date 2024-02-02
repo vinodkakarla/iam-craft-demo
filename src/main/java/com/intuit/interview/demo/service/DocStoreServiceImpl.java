@@ -8,6 +8,7 @@ import com.intuit.interview.demo.utils.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.util.Arrays;
@@ -44,6 +45,10 @@ public class DocStoreServiceImpl {
     // The name of the S3 bucket
     private final String bucketName = "s3-develop";
 
+    public List<String> listObjects() {
+        return listObjects(bucketName);
+    }
+
     /**
      * This method lists all objects in the S3 bucket.
      * It traces the execution of the method and returns a list of JSON representations of the objects.
@@ -52,11 +57,18 @@ public class DocStoreServiceImpl {
      */
     @TraceMethodExecution(message = "Listing Objects")
     @TimedSeries(message = "List Objects")
-    public List<String> listObjects() {
+    public List<String> listObjects(String bucketName) {
+        if(bucketName == null || "".equals(bucketName)) {
+            bucketName = this.bucketName;
+        }
         return s3Repository.listObjects(bucketName)
                 .stream().map(x -> type.cast(x.toBuilder()))
                 .map(jsonUtils::getJsonFromObject)
                 .collect(Collectors.toList());
+    }
+
+    public String getObjectMetadata(String fileName) {
+        return getObjectMetadata(fileName, bucketName);
     }
 
     /**
@@ -70,7 +82,10 @@ public class DocStoreServiceImpl {
     @TraceMethodExecution(message = "Get Object Metadata")
     @TimedSeries(message = "Get Object Metadata")
     @Cacheable("doc-store-metadata")
-    public String getObjectMetadata(String fileName) {
+    public String getObjectMetadata(String fileName, String bucketName) {
+        if(bucketName == null || "".equals(bucketName)) {
+            bucketName = this.bucketName;
+        }
         Optional<String> metadata = s3Repository.getObjectFile(bucketName, fileName)
                 .map(x -> type.cast(x.toBuilder()))
                 .map(jsonUtils::getJsonFromObject);

@@ -2,9 +2,13 @@ package com.intuit.interview.demo.resource;
 
 import com.intuit.interview.demo.service.DocStoreServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Principal;
 import java.util.List;
 
 /**
@@ -13,7 +17,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/doc-store")
-public class DocStoreController {
+public class DocStoreResourceImpl {
 
     // The DocStoreServiceImpl used to interact with the document store
     private final DocStoreServiceImpl docStoreService;
@@ -23,7 +27,7 @@ public class DocStoreController {
      *
      * @param docStoreService the DocStoreServiceImpl to use
      */
-    public DocStoreController(DocStoreServiceImpl docStoreService) {
+    public DocStoreResourceImpl(DocStoreServiceImpl docStoreService) {
         this.docStoreService = docStoreService;
     }
 
@@ -33,8 +37,9 @@ public class DocStoreController {
      * @return a list of all objects in the document store
      */
     @GetMapping("/print-all")
-    public List<String> listObjects() {
-        return docStoreService.listObjects();
+    @PreAuthorize("hasAuthority('SCOPE_email')")
+    public List<String> listObjects(@AuthenticationPrincipal OidcUser user, @RequestParam(name = "bucket") String bucket) {
+        return docStoreService.listObjects(bucket);
     }
 
     /**
@@ -45,7 +50,7 @@ public class DocStoreController {
      * @return the metadata of the specified object
      */
     @GetMapping("/object_metadata/**")
-    public String getObjectMetadata(HttpServletRequest request) {
+    public String getObjectMetadata(Principal principal, HttpServletRequest request) {
         return docStoreService.getObjectMetadata(decode(request));
     }
 
